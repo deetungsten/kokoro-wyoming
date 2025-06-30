@@ -1,24 +1,29 @@
-# Use NVIDIA's L4T (Linux for Tegra) base image with CUDA support
-# This is specifically designed for Jetson devices
-FROM nvcr.io/nvidia/l4t-pytorch:r35.2.1-pth2.0-py3
-
-# Alternative base images you can use:
-# FROM nvcr.io/nvidia/l4t-base:r35.4.1  # Minimal L4T base
-# FROM nvcr.io/nvidia/l4t-python:r35.4.1  # L4T with Python
+# Use a more recent L4T base image with newer Python
+FROM nvcr.io/nvidia/l4t-base:r36.2.0
 
 WORKDIR /app
 
-# Update package lists and install curl
+# Install Python 3.10+ and development tools
 RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
     curl \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
+# Create symlinks for python3 to point to python3.10
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python3
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
+
+# Install your requirements
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Install ONNX Runtime GPU (for Jetson/ARM64)
-# This is the GPU-accelerated version for Jetson devices
+# Install ONNX Runtime GPU for Jetson
 RUN pip install onnxruntime-gpu --extra-index-url https://developer.download.nvidia.com/compute/redist
 
 # Download required model files
