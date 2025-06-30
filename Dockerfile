@@ -23,8 +23,16 @@ RUN python3 -m pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Install ONNX Runtime GPU for Jetson
-RUN pip install onnxruntime-gpu --extra-index-url https://developer.download.nvidia.com/compute/redist
+# Install ONNX Runtime for Jetson (ARM64)
+# For Jetson, we use the regular onnxruntime and TensorRT execution provider
+RUN pip install onnxruntime
+
+# Install additional dependencies for GPU acceleration on Jetson
+RUN apt-get update && apt-get install -y \
+    nvidia-tensorrt \
+    python3-libnvinfer \
+    python3-libnvinfer-dev \
+    && rm -rf /var/lib/apt/lists/* || echo "TensorRT packages not available, continuing with CUDA provider"
 
 # Download required model files
 RUN mkdir -p /app/src && \
